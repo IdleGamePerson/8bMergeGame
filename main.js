@@ -7,7 +7,7 @@ const { world } = engine;
 
 // Mobile-Erkennung
 function isMobile() {
-  return /Mobi|Android|iPhone|iPod|Tablet/i.test(navigator.userAgent);
+  return /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
 }
 
 if (isMobile()) {
