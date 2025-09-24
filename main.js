@@ -5,6 +5,14 @@ const height = window.innerHeight;
 const engine = Engine.create();
 const { world } = engine;
 
+// Mobile-Erkennung
+function isMobile() {
+  return /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
+}
+
+if (isMobile()) {
+  document.getElementById("controls").style.display = "flex";
+}
 let nextQueue = []; // Vorschau-Warteschlange
 
 function refillQueue() {
@@ -400,4 +408,3 @@ Events.on(render, "afterRender", () => {
     context.textAlign = "center";
     context.fillText("Next", previewStartX + (nextQueue.length * spacing) / 2 - spacing / 2, previewY - 40);
   });
-    
