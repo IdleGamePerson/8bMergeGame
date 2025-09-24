@@ -39,8 +39,18 @@ Runner.run(Runner.create(), engine);
 
 // Container
 const wallThickness = 50;
-const containerWidth = 400;
-const containerHeight = 600;
+let containerWidth, containerHeight;
+
+if (/Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent)) {
+  // Mobile: kleiner
+  containerWidth = 250;
+  containerHeight = 400;
+} else {
+  // Desktop: Standard
+  containerWidth = 400;
+  containerHeight = 600;
+}
+
 const containerX = width / 2;
 const containerY = height - containerHeight / 2;
 
@@ -346,65 +356,69 @@ function drawBall(context, ball) {
 
 // UI & Zeichnen
 Events.on(render, "afterRender", () => {
-    const context = render.context;
-  
-    // Score oben links
-    context.font = "bold 24px Arial";
-    context.fillStyle = "white";
-    context.textAlign = "left";
-    context.fillText("Score: " + score, 20, 40);
-  
-    // Game Over Linie
-    context.strokeStyle = "#f33";
-    context.lineWidth = 2;
+  const context = render.context;
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
+
+  // Score oben links
+  context.font = "bold 24px Arial";
+  context.fillStyle = "white";
+  context.textAlign = "left";
+  context.fillText("Score: " + score, 20, 40);
+
+  // Game Over Linie
+  context.strokeStyle = "#f33";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(containerX - containerWidth / 2, gameOverLineY);
+  context.lineTo(containerX + containerWidth / 2, gameOverLineY);
+  context.stroke();
+
+  // Kugeln im Spielfeld
+  droppedBalls.forEach(ball => drawBall(context, ball));
+  if (currentBall && currentBall.ballValue) drawBall(context, currentBall);
+
+  // Vorschau oben rechts
+  const previewStartX = isMobile ? width - 250 : width - 420;
+  const previewY = isMobile ? 60 : 100;
+  const spacing = isMobile ? 70 : 110;
+  const previewScale = isMobile ? 0.6 : 0.9;
+
+  // Label
+  context.font = "bold 20px Arial";
+  context.fillStyle = "white";
+  context.textAlign = "center";
+  context.fillText("Next", previewStartX + (nextQueue.length * spacing) / 2 - spacing / 2, previewY - 40);
+
+  // Kugeln + Pfeile
+  nextQueue.forEach((val, i) => {
+    const r = baseRadius * val * previewScale;
+    const posX = previewStartX + i * spacing;
+
+    // Kugel
+    context.save();
+    context.translate(posX, previewY);
     context.beginPath();
-    context.moveTo(containerX - containerWidth / 2, gameOverLineY);
-    context.lineTo(containerX + containerWidth / 2, gameOverLineY);
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.fillStyle = "#444";
+    context.fill();
+    context.strokeStyle = "#000";
+    context.lineWidth = 2;
     context.stroke();
-  
-    // Kugeln im Spielfeld zeichnen
-    droppedBalls.forEach(ball => drawBall(context, ball));
-    if (currentBall && currentBall.ballValue) drawBall(context, currentBall);
-  
-    // Vorschau oben rechts
-    const previewStartX = width - 440; // weiter links anfangen, damit alles Platz hat
-    const previewY = 100;
-    const spacing = 125; // fester Abstand zwischen Kugeln
-  
-    nextQueue.forEach((val, i) => {
-      const r = baseRadius * val;
-      const posX = previewStartX + i * spacing;
-  
-      // Kugel zeichnen
-      context.save();
-      context.translate(posX, previewY);
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI * 2);
-      context.fillStyle = "#444";
-      context.fill();
-      context.strokeStyle = "#000";
-      context.lineWidth = 2;
-      context.stroke();
-      context.font = `bold ${r}px Arial`;
+    context.font = `bold ${r}px Arial`;
+    context.fillStyle = "white";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(val, 0, 0);
+    context.restore();
+
+    // Pfeil → außer nach letzter Kugel
+    if (i < nextQueue.length - 1) {
+      context.font = isMobile ? "bold 20px Arial" : "bold 32px Arial";
       context.fillStyle = "white";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.fillText(val, 0, 0);
-      context.restore();
-  
-      // Pfeil zwischen den Kugeln (außer nach der letzten)
-      if (i < nextQueue.length - 1) {
-        context.font = "bold 32px Arial";
-        context.fillStyle = "white";
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.fillText("←", posX + spacing / 2, previewY);
-      }
-    });
-  
-    // Label für Preview
-    context.font = "bold 20px Arial";
-    context.fillStyle = "white";
-    context.textAlign = "center";
-    context.fillText("Next", previewStartX + (nextQueue.length * spacing) / 2 - spacing / 2, previewY - 40);
+      context.fillText("←", posX + spacing / 2, previewY);
+    }
   });
+});
+    
