@@ -42,14 +42,13 @@ const wallThickness = 50;
 let containerWidth, containerHeight;
 
 if (/Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent)) {
-  // Mobile: kleiner
-  containerWidth = 250;
-  containerHeight = 400;
+  containerWidth = 200;
+  containerHeight = 300;
 } else {
-  // Desktop: Standard
   containerWidth = 400;
   containerHeight = 600;
 }
+
 
 const containerX = width / 2;
 const containerY = height - containerHeight / 2;
@@ -378,10 +377,10 @@ Events.on(render, "afterRender", () => {
   if (currentBall && currentBall.ballValue) drawBall(context, currentBall);
 
   // Vorschau oben rechts
-  const previewStartX = isMobile ? width - 250 : width - 420;
-  const previewY = isMobile ? 60 : 100;
-  const spacing = isMobile ? 70 : 110;
-  const previewScale = isMobile ? 0.6 : 0.9;
+  const previewStartX = isMobile ? width - 180 : width - 420;
+  const previewY = isMobile ? 50 : 100;
+  const spacing = isMobile ? 60 : 110;
+  const previewScale = isMobile ? 0.5 : 0.9;
 
   // Label
   context.font = "bold 20px Arial";
@@ -422,3 +421,11 @@ Events.on(render, "afterRender", () => {
   });
 });
     
+// Verhindert Textauswahl & Kontextmenü bei Mobile Controls
+document.getElementById("controls").addEventListener("touchstart", e => {
+  e.preventDefault();
+}, { passive: false });
+
+document.getElementById("controls").addEventListener("contextmenu", e => {
+  e.preventDefault();
+});
