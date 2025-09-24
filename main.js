@@ -7,7 +7,7 @@ const { world } = engine;
 
 // Mobile-Erkennung
 function isMobile() {
-  return /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
+  return /Mobi|Android|iPhone|iPod|Tablet/i.test(navigator.userAgent);
 }
 
 if (isMobile()) {
@@ -41,7 +41,7 @@ Runner.run(Runner.create(), engine);
 const wallThickness = 50;
 let containerWidth, containerHeight;
 
-if (/Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent)) {
+if (/Mobi|Android|iPhone|iPod|Tablet/i.test(navigator.userAgent)) {
   containerWidth = 200;
   containerHeight = 300;
 } else {
@@ -356,7 +356,7 @@ function drawBall(context, ball) {
 // UI & Zeichnen
 Events.on(render, "afterRender", () => {
   const context = render.context;
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
+  const isMobile = /Mobi|Android|iPhone|iPod|Tablet/i.test(navigator.userAgent);
 
   // Score oben links
   context.font = "bold 24px Arial";
