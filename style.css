@@ -1,0 +1,37 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
+  }
+  
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  #controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 10;
+  }
+  
+  #controls button {
+    width: 70px;
+    height: 70px;
+    font-size: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #444;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+  
+  #controls button:active {
+    background: #666;
+  }
+  
