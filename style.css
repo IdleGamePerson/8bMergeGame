@@ -1,41 +1,11 @@
 body {
-    margin: 0;
-    overflow: hidden;
-    background: #111;
-  }
-  
-  canvas {
-    display: block;
-    width: 100vw;
-    height: 100vh;
-  }
-  
-  #controls {
-    position: fixed;
-    bottom: 40px; /* tiefer als vorher */
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 20px;
-    z-index: 10;
-    user-select: none; /* Textauswahl verhindern */
-  }
-  
-  #controls button {
-    width: 60px; /* kleiner */
-    height: 60px;
-    font-size: 28px;
-    border-radius: 50%;
-    border: none;
-    background: #444;
-    color: white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    user-select: none; /* Textauswahl verhindern */
-    -webkit-user-select: none; /* Safari fix */
-    -webkit-touch-callout: none; /* verhindert "Kopieren" Popup auf iOS */
-  }
-  
-  #controls button:active {
-    background: #666;
-  }  
-  
+  margin: 0;
+  overflow: hidden;
+  background: #111;
+}
+
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
