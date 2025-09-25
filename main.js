@@ -28,6 +28,26 @@ const containerHeight = 600;
 const containerX = width / 2;
 const containerY = height - containerHeight / 2;
 
+let animationTime = 0;
+let blinkToggle = false;
+let quarterColors = [];
+
+setInterval(() => {
+  blinkToggle = !blinkToggle; // für 11
+}, 150);
+
+setInterval(() => {
+  // Neue Farben für 13
+  quarterColors = Array.from({ length: 4 }, () =>
+    randomGray()
+  );
+}, 500);
+
+function randomGray() {
+  const val = Math.floor(Math.random() * 222) + 34; // von 0x22 bis 0xdd
+  return `rgb(${val},${val},${val})`;
+}
+
 const walls = [
   Bodies.rectangle(containerX, containerY + containerHeight / 2, containerWidth, wallThickness, { isStatic: true }),
   Bodies.rectangle(containerX - containerWidth / 2, containerY, wallThickness, containerHeight, { isStatic: true }),
@@ -281,7 +301,7 @@ function drawBall(context, ball) {
       context.fill();
     }
     strokeOutline();
-  } else if (val >= 10) {
+  } else if (val === 10) {
     const rings = 5;
     for (let i = rings; i > 0; i--) {
       context.beginPath();
@@ -290,7 +310,41 @@ function drawBall(context, ball) {
       context.fill();
     }
     strokeOutline();
-  }
+  } else if (val === 11) {
+    // Blinkendes Design
+    context.fillStyle = blinkToggle ? "#f44" : "#44f";
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.fill();
+    strokeOutline();
+  } else if (val === 12) {
+    // Rotierende Drittelkreise
+    const rotation = animationTime * 2 * Math.PI; // 1 Rotation/Sek
+    const colors = ["#f00", "#0f0", "#00f"];
+    for (let i = 0; i < 3; i++) {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.arc(0, 0, r, rotation + (i * 2 * Math.PI) / 3, rotation + ((i + 1) * 2 * Math.PI) / 3);
+      context.closePath();
+      context.fillStyle = colors[i];
+      context.fill();
+    }
+    strokeOutline();
+  } else if (val >= 13) {
+    // Viertelkreise mit zufälligen Grautönen
+    if (quarterColors.length < 4) {
+      quarterColors = Array.from({ length: 4 }, () => randomGray());
+    }
+    for (let i = 0; i < 4; i++) {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.arc(0, 0, r, (i * Math.PI) / 2, ((i + 1) * Math.PI) / 2);
+      context.closePath();
+      context.fillStyle = quarterColors[i];
+      context.fill();
+    }
+    strokeOutline();
+  }  
 
   // Zahl
   context.font = `bold ${r}px Arial`;
@@ -365,4 +419,5 @@ Events.on(render, "afterRender", () => {
   context.fillStyle = "white";
   context.textAlign = "center";
   context.fillText("Next", previewStartX + (nextQueue.length * spacing) / 2 - spacing / 2, previewY - 40);
+  animationTime += 1 / 60; // ca. 60 FPS
 });
