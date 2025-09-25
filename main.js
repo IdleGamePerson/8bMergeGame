@@ -5,22 +5,6 @@ const height = window.innerHeight;
 const engine = Engine.create();
 const { world } = engine;
 
-// Mobile-Erkennung
-function isMobile() {
-  return /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
-}
-
-if (isMobile()) {
-  document.getElementById("controls").style.display = "flex";
-}
-let nextQueue = []; // Vorschau-Warteschlange
-
-function refillQueue() {
-    while (nextQueue.length < 4) {
-      nextQueue.push(Math.floor(Math.random() * 4) + 1);
-    }
-  }
-  
 const canvas = document.getElementById("gameCanvas");
 const render = Render.create({
   element: document.body,
@@ -37,19 +21,10 @@ const render = Render.create({
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
-// Container
+// Spielfeld-Container
 const wallThickness = 50;
-let containerWidth, containerHeight;
-
-if (/Mobi|Android|iPhone|iPod|Tablet/i.test(navigator.userAgent)) {
-  containerWidth = 200;
-  containerHeight = 300;
-} else {
-  containerWidth = 400;
-  containerHeight = 600;
-}
-
-
+const containerWidth = 400;
+const containerHeight = 600;
 const containerX = width / 2;
 const containerY = height - containerHeight / 2;
 
@@ -70,22 +45,30 @@ let touchingLineTime = 0;
 const baseRadius = 10;
 let currentBall = null;
 let droppedBalls = [];
+let nextQueue = [];
+
+// Vorschau-Warteschlange auffüllen
+function refillQueue() {
+  while (nextQueue.length < 4) {
+    nextQueue.push(Math.floor(Math.random() * 4) + 1);
+  }
+}
 
 function spawnBall() {
-    refillQueue();
-    const num = nextQueue.shift(); // erste Zahl nehmen
-    refillQueue(); // neue nachfüllen
-    const radius = baseRadius * num;
-    currentBall = Bodies.circle(containerX, 100, radius, {
-      restitution: 0.5,
-      render: { fillStyle: "#fff" }
-    });
-    currentBall.label = `ball-${num}`;
-    currentBall.ballValue = num;
-    Body.setStatic(currentBall, true);
-    World.add(world, currentBall);
-  }
-  
+  refillQueue();
+  const num = nextQueue.shift();
+  refillQueue();
+  const radius = baseRadius * num;
+  currentBall = Bodies.circle(containerX, 100, radius, {
+    restitution: 0.5,
+    render: { fillStyle: "#fff" }
+  });
+  currentBall.label = `ball-${num}`;
+  currentBall.ballValue = num;
+  Body.setStatic(currentBall, true);
+  World.add(world, currentBall);
+}
+
 spawnBall();
 
 // Steuerung
@@ -102,15 +85,15 @@ document.addEventListener("keydown", (e) => {
     moveRight = true;
   } else if (["ArrowDown", "ArrowUp", "s", "S", "w", "W"].includes(e.key)) {
     if (canDrop) {
-        Body.setStatic(currentBall, false);
-        droppedBalls.push(currentBall);
-        currentBall = null;
-        canDrop = false;
-        setTimeout(() => {
-          canDrop = true;
-          if (!gameOver) spawnBall();
-        }, 2000); // statt 5000
-      }      
+      Body.setStatic(currentBall, false);
+      droppedBalls.push(currentBall);
+      currentBall = null;
+      canDrop = false;
+      setTimeout(() => {
+        canDrop = true;
+        if (!gameOver) spawnBall();
+      }, 2000); // 2 Sekunden statt 5
+    }
   }
 });
 
@@ -122,37 +105,11 @@ document.addEventListener("keyup", (e) => {
   }
 });
 
-// Mobile Buttons
-const leftBtn = document.getElementById("leftBtn");
-const rightBtn = document.getElementById("rightBtn");
-const dropBtn = document.getElementById("dropBtn");
-
-// gedrückt halten = Bewegung aktiv
-leftBtn.addEventListener("touchstart", () => { moveLeft = true; });
-leftBtn.addEventListener("touchend", () => { moveLeft = false; });
-
-rightBtn.addEventListener("touchstart", () => { moveRight = true; });
-rightBtn.addEventListener("touchend", () => { moveRight = false; });
-
-// Drop-Knopf
-dropBtn.addEventListener("touchstart", () => {
-  if (currentBall && canDrop && !gameOver) {
-    Body.setStatic(currentBall, false);
-    droppedBalls.push(currentBall);
-    currentBall = null;
-    canDrop = false;
-    setTimeout(() => {
-      canDrop = true;
-      if (!gameOver) spawnBall();
-    }, 2000); // 2s Cooldown
-  }
-});
-
-// Smooth Bewegung & Begrenzung
+// Smooth Bewegung
 Events.on(engine, "beforeUpdate", () => {
   if (!currentBall || gameOver) return;
 
-  const speed = 5; // px pro Frame
+  const speed = 5;
   const minX = containerX - containerWidth / 2 + currentBall.circleRadius;
   const maxX = containerX + containerWidth / 2 - currentBall.circleRadius;
 
@@ -164,7 +121,7 @@ Events.on(engine, "beforeUpdate", () => {
   }
 });
 
-// Kollision & Kombination
+// Kombination
 Events.on(engine, "collisionStart", (event) => {
   const pairs = event.pairs;
   const merged = new Set();
@@ -208,7 +165,7 @@ Events.on(engine, "collisionStart", (event) => {
   });
 });
 
-// Game Over Check
+// Game Over
 setInterval(() => {
   if (gameOver) return;
 
@@ -227,144 +184,135 @@ setInterval(() => {
   }
 }, 100);
 
-// Zeichnen der Kugeln mit Designs
+// Designs
 function drawBall(context, ball) {
-    const { x, y } = ball.position;
-    const angle = ball.angle;
-    const r = ball.circleRadius;
-    const val = ball.ballValue;
-  
-    context.save();
-    context.translate(x, y);
-    context.rotate(angle);
-  
-    // Schwarzer Randkreis (später über alles)
-    function strokeOutline() {
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI * 2);
-      context.strokeStyle = "#000";
-      context.lineWidth = 2;
-      context.stroke();
-    }
-  
-    if (val === 1) {
-      context.fillStyle = "#ff0";
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI * 2);
-      context.fill();
-      strokeOutline();
-    } else if (val === 2) {
-      context.fillStyle = "#0f0";
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI * 2);
-      context.fill();
-      strokeOutline();
-    } else if (val === 3) {
-      context.fillStyle = "#f00";
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI * 2);
-      context.fill();
-      strokeOutline();
-    } else if (val === 4) {
-      context.fillStyle = "#00f";
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI * 2);
-      context.fill();
-      strokeOutline();
-    } else if (val === 5) {
-      // Zwei Hälften
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI);
-      context.fillStyle = "#0bf";
-      context.fill();
-  
-      context.beginPath();
-      context.arc(0, 0, r, Math.PI, Math.PI * 2);
-      context.fillStyle = "#09f";
-      context.fill();
-  
-      strokeOutline();
-    } else if (val === 6) {
-      // Vier Quadranten korrekt
-      const colors = ["#f50", "#f10", "#f50", "#f10"]; // UL, UR, DR, DL
-      for (let i = 0; i < 4; i++) {
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.arc(0, 0, r, i * Math.PI / 2, (i + 1) * Math.PI / 2);
-        context.closePath();
-        context.fillStyle = colors[i];
-        context.fill();
-      }
-      strokeOutline();
-    } else if (val === 7) {
-      for (let i = 0; i < 12; i++) {
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.arc(0, 0, r, (i * Math.PI) / 6, ((i + 1) * Math.PI) / 6);
-        context.closePath();
-        context.fillStyle = i % 2 === 0 ? "#0f2" : "#0f6";
-        context.fill();
-      }
-      strokeOutline();
-    } else if (val === 8) {
-      // Zehn gerade Streifen
-      context.save();
-      // Clip auf Kreis
-      context.beginPath();
-      context.arc(0, 0, r, 0, Math.PI * 2);
-      context.clip();
-  
-      const stripeWidth = (2 * r) / 10;
-      for (let i = 0; i < 10; i++) {
-        context.fillStyle = i % 2 === 0 ? "#333" : "#ddd";
-        context.fillRect(-r + i * stripeWidth, -r, stripeWidth, 2 * r);
-      }
-      context.restore();
-      strokeOutline();
-    } else if (val === 9) {
-      const colors = ["#f00", "#ff0", "#0f0", "#0ff", "#00f", "#f0f"];
-      for (let i = 0; i < 6; i++) {
-        context.beginPath();
-        context.moveTo(0, 0);
-        context.arc(0, 0, r, (i * Math.PI * 2) / 6, ((i + 1) * Math.PI * 2) / 6);
-        context.closePath();
-        context.fillStyle = colors[i];
-        context.fill();
-      }
-      strokeOutline();
-    } else if (val >= 10) {
-      const rings = 5;
-      for (let i = rings; i > 0; i--) {
-        context.beginPath();
-        context.arc(0, 0, (r * i) / rings, 0, Math.PI * 2);
-        context.fillStyle = i % 2 === 0 ? "#b7f" : "#a5f";
-        context.fill();
-      }
-      strokeOutline();
-    }
-  
-    // Zahl
-    context.font = `bold ${r}px Arial`;
-    context.fillStyle = "white";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(val, 0, 0);
-  
-    context.restore();
-  }  
+  const { x, y } = ball.position;
+  const angle = ball.angle;
+  const r = ball.circleRadius;
+  const val = ball.ballValue;
 
-// UI & Zeichnen
+  context.save();
+  context.translate(x, y);
+  context.rotate(angle);
+
+  function strokeOutline() {
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.strokeStyle = "#000";
+    context.lineWidth = 2;
+    context.stroke();
+  }
+
+  if (val === 1) {
+    context.fillStyle = "#ff0";
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.fill();
+    strokeOutline();
+  } else if (val === 2) {
+    context.fillStyle = "#0f0";
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.fill();
+    strokeOutline();
+  } else if (val === 3) {
+    context.fillStyle = "#f00";
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.fill();
+    strokeOutline();
+  } else if (val === 4) {
+    context.fillStyle = "#00f";
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.fill();
+    strokeOutline();
+  } else if (val === 5) {
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI);
+    context.fillStyle = "#0bf";
+    context.fill();
+    context.beginPath();
+    context.arc(0, 0, r, Math.PI, Math.PI * 2);
+    context.fillStyle = "#09f";
+    context.fill();
+    strokeOutline();
+  } else if (val === 6) {
+    const colors = ["#f50", "#f10", "#f50", "#f10"];
+    for (let i = 0; i < 4; i++) {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.arc(0, 0, r, i * Math.PI / 2, (i + 1) * Math.PI / 2);
+      context.closePath();
+      context.fillStyle = colors[i];
+      context.fill();
+    }
+    strokeOutline();
+  } else if (val === 7) {
+    for (let i = 0; i < 12; i++) {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.arc(0, 0, r, (i * Math.PI) / 6, ((i + 1) * Math.PI) / 6);
+      context.closePath();
+      context.fillStyle = i % 2 === 0 ? "#0f2" : "#0f6";
+      context.fill();
+    }
+    strokeOutline();
+  } else if (val === 8) {
+    context.save();
+    context.beginPath();
+    context.arc(0, 0, r, 0, Math.PI * 2);
+    context.clip();
+    const stripeWidth = (2 * r) / 10;
+    for (let i = 0; i < 10; i++) {
+      context.fillStyle = i % 2 === 0 ? "#333" : "#ddd";
+      context.fillRect(-r + i * stripeWidth, -r, stripeWidth, 2 * r);
+    }
+    context.restore();
+    strokeOutline();
+  } else if (val === 9) {
+    const colors = ["#f00", "#ff0", "#0f0", "#0ff", "#00f", "#f0f"];
+    for (let i = 0; i < 6; i++) {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.arc(0, 0, r, (i * Math.PI * 2) / 6, ((i + 1) * Math.PI * 2) / 6);
+      context.closePath();
+      context.fillStyle = colors[i];
+      context.fill();
+    }
+    strokeOutline();
+  } else if (val >= 10) {
+    const rings = 5;
+    for (let i = rings; i > 0; i--) {
+      context.beginPath();
+      context.arc(0, 0, (r * i) / rings, 0, Math.PI * 2);
+      context.fillStyle = i % 2 === 0 ? "#b7f" : "#a5f";
+      context.fill();
+    }
+    strokeOutline();
+  }
+
+  // Zahl
+  context.font = `bold ${r}px Arial`;
+  context.fillStyle = "white";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(val, 0, 0);
+
+  context.restore();
+}
+
+// Render-Loop
 Events.on(render, "afterRender", () => {
   const context = render.context;
-  const isMobile = /Mobi|Android|iPhone|iPod|Tablet/i.test(navigator.userAgent);
 
-  // Score oben links
+  // Score
   context.font = "bold 24px Arial";
   context.fillStyle = "white";
   context.textAlign = "left";
   context.fillText("Score: " + score, 20, 40);
 
-  // Game Over Linie
+  // Linie
   context.strokeStyle = "#f33";
   context.lineWidth = 2;
   context.beginPath();
@@ -372,25 +320,17 @@ Events.on(render, "afterRender", () => {
   context.lineTo(containerX + containerWidth / 2, gameOverLineY);
   context.stroke();
 
-  // Kugeln im Spielfeld
+  // Kugeln
   droppedBalls.forEach(ball => drawBall(context, ball));
   if (currentBall && currentBall.ballValue) drawBall(context, currentBall);
 
-  // Vorschau oben rechts
-  const previewStartX = isMobile ? width - 180 : width - 420;
-  const previewY = isMobile ? 50 : 100;
-  const spacing = isMobile ? 60 : 110;
-  const previewScale = isMobile ? 0.5 : 0.9;
+  // Preview
+  const previewStartX = width - 420;
+  const previewY = 100;
+  const spacing = 120;
 
-  // Label
-  context.font = "bold 20px Arial";
-  context.fillStyle = "white";
-  context.textAlign = "center";
-  context.fillText("Next", previewStartX + (nextQueue.length * spacing) / 2 - spacing / 2, previewY - 40);
-
-  // Kugeln + Pfeile
   nextQueue.forEach((val, i) => {
-    const r = baseRadius * val * previewScale;
+    const r = baseRadius * val;
     const posX = previewStartX + i * spacing;
 
     // Kugel
@@ -410,22 +350,19 @@ Events.on(render, "afterRender", () => {
     context.fillText(val, 0, 0);
     context.restore();
 
-    // Pfeil → außer nach letzter Kugel
+    // Pfeil
     if (i < nextQueue.length - 1) {
-      context.font = isMobile ? "bold 20px Arial" : "bold 32px Arial";
+      context.font = "bold 32px Arial";
       context.fillStyle = "white";
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.fillText("←", posX + spacing / 2, previewY);
     }
   });
-});
-    
-// Verhindert Textauswahl & Kontextmenü bei Mobile Controls
-document.getElementById("controls").addEventListener("touchstart", e => {
-  e.preventDefault();
-}, { passive: false });
 
-document.getElementById("controls").addEventListener("contextmenu", e => {
-  e.preventDefault();
+  // Label
+  context.font = "bold 20px Arial";
+  context.fillStyle = "white";
+  context.textAlign = "center";
+  context.fillText("Next", previewStartX + (nextQueue.length * spacing) / 2 - spacing / 2, previewY - 40);
 });
