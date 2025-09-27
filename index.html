@@ -8,7 +8,14 @@
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
-
+  <div id="controls">
+    <label for="numberMode">Number Mode</label>
+    <select id="numberMode">
+      <option value="linear">Linear</option>
+      <option value="exponential">Exponential</option>
+      <option value="quadratic">Quadratic</option>
+    </select>
+  </div>  
   <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
   <script src="main.js"></script>
 </body>
