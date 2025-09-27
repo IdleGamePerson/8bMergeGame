@@ -9,3 +9,17 @@ canvas {
   width: 100vw;
   height: 100vh;
 }
+
+#controls {
+  position: absolute;
+  top: 60px; /* etwas unter dem Score */
+  left: 20px;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+#controls select {
+  margin-left: 5px;
+  padding: 4px;
+  font-size: 14px;
+}
