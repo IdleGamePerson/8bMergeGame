@@ -18,6 +18,23 @@ const render = Render.create({
   }
 });
 
+let numberMode = "linear";
+
+document.getElementById("numberMode").addEventListener("change", (e) => {
+  numberMode = e.target.value;
+});
+
+function getDisplayValue(val) {
+  if (numberMode === "linear") {
+    return val;
+  } else if (numberMode === "exponential") {
+    return Math.pow(2, val - 1); // val=1 →1, val=2 →2, val=3 →4, val=4 →8
+  } else if (numberMode === "quadratic") {
+    return val * val;
+  }
+  return val;
+}
+
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
@@ -34,14 +51,14 @@ let quarterColors = [];
 
 setInterval(() => {
   blinkToggle = !blinkToggle; // für 11
-}, 150);
+}, 75);
 
 setInterval(() => {
   // Neue Farben für 13
   quarterColors = Array.from({ length: 4 }, () =>
     randomGray()
   );
-}, 500);
+}, 100);
 
 function randomGray() {
   const val = Math.floor(Math.random() * 222) + 34; // von 0x22 bis 0xdd
@@ -318,19 +335,6 @@ function drawBall(context, ball) {
     context.fill();
     strokeOutline();
   } else if (val === 12) {
-    // Rotierende Drittelkreise
-    const rotation = animationTime * 2 * Math.PI; // 1 Rotation/Sek
-    const colors = ["#f00", "#0f0", "#00f"];
-    for (let i = 0; i < 3; i++) {
-      context.beginPath();
-      context.moveTo(0, 0);
-      context.arc(0, 0, r, rotation + (i * 2 * Math.PI) / 3, rotation + ((i + 1) * 2 * Math.PI) / 3);
-      context.closePath();
-      context.fillStyle = colors[i];
-      context.fill();
-    }
-    strokeOutline();
-  } else if (val >= 13) {
     // Viertelkreise mit zufälligen Grautönen
     if (quarterColors.length < 4) {
       quarterColors = Array.from({ length: 4 }, () => randomGray());
@@ -344,14 +348,31 @@ function drawBall(context, ball) {
       context.fill();
     }
     strokeOutline();
-  }  
+  } else if (val >= 13) {
+    // Rotierende Neuntelkreise
+    const rotation = animationTime * 2 * Math.PI; // 1 Rotation pro Sekunde
+    const colors = ["#f00", "#0f0", "#00f"];
+    for (let i = 0; i < 9; i++) {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.arc(0, 0, r, rotation + (i * 2 * Math.PI) / 9, rotation + ((i + 1) * 2 * Math.PI) / 9);
+      context.closePath();
+      context.fillStyle = colors[i % 3]; // abwechselnd rot, grün, blau
+      context.fill();
+    }
+    strokeOutline();
+  }
 
   // Zahl
-  context.font = `bold ${r}px Arial`;
+  const displayVal = getDisplayValue(val);
+  let fontSize = Math.min(r, (r * 2.8) / String(displayVal).length);
+  
+  context.font = `bold ${fontSize}px Arial`;
   context.fillStyle = "white";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(val, 0, 0);
+  context.fillText(displayVal, 0, 0);
+  
 
   context.restore();
 }
@@ -401,7 +422,7 @@ Events.on(render, "afterRender", () => {
     context.fillStyle = "white";
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.fillText(val, 0, 0);
+    context.fillText(getDisplayValue(val), 0, 0);
     context.restore();
 
     // Pfeil
@@ -419,5 +440,5 @@ Events.on(render, "afterRender", () => {
   context.fillStyle = "white";
   context.textAlign = "center";
   context.fillText("Next", previewStartX + (nextQueue.length * spacing) / 2 - spacing / 2, previewY - 40);
-  animationTime += 1 / 60; // ca. 60 FPS
+  animationTime += 1 / 30; // ca. 60 FPS
 });
